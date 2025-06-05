@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>نظام إدارة الطلبات</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      padding: 20px;
+      background: linear-gradient(135deg, #f9f9f9 0%, #f0f2f5 100%);
+      color: #333;
+      min-height: 100vh;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 20px;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(167, 34, 69, 0.1);
+    }
+    
+    h1 {
+      color: #a72245;
+      font-size: 2.2rem;
+      margin-bottom: 10px;
+    }
+    
+    .subtitle {
+      color: #666;
+      font-size: 1.1rem;
+    }
+    
+    .search-container {
+      background: white;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+      margin-bottom: 30px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .search-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 8px;
+      height: 100%;
+      background: linear-gradient(to bottom, #a72245, #8a1b3a);
+    }
+    
+    .search-box {
+      flex: 1;
+      min-width: 300px;
+      position: relative;
+    }
+    
+    .search-box input {
+      width: 100%;
+      padding: 15px 20px;
+      padding-right: 60px;
+      border: 1px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 16px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+      transition: all 0.3s;
+    }
+    
+    .search-box input:focus {
+      border-color: #a72245;
+      box-shadow: 0 2px 10px rgba(167, 34, 69, 0.2);
+      outline: none;
+    }
+    
+    .search-box i {
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #777;
+      font-size: 20px;
+    }
+    
+    .search-buttons {
+      display: flex;
+      gap: 15px;
+    }
+    
+    button {
+      padding: 14px 25px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .search-btn {
+      background: linear-gradient(to right, #a72245, #8a1b3a);
+      color: white;
+    }
+    
+    .reset-btn {
+      background: linear-gradient(to right, #2c3e50, #1a2530);
+      color: white;
+    }
+    
+    button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+    }
+    
+    button:active {
+      transform: translateY(-1px);
+    }
+    
+    .orders-container {
+      background: white;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+      margin-bottom: 40px;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    th, td {
+      padding: 18px;
+      text-align: right;
+      border-bottom: 1px solid #eee;
+    }
+    
+    th {
+      background: linear-gradient(to right, #a72245, #8a1b3a);
+      color: white;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      font-size: 18px;
+    }
+    
+    tbody tr {
+      transition: background 0.2s;
+    }
+    
+    tbody tr:not(.order-details):hover {
+      background: #fef7f9;
+    }
+    
+    .order-details {
+      background: #f8f9fa;
+    }
+    
+    .order-details td {
+      padding: 25px;
+    }
+    
+    .items-container {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    
+    .item-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px dashed #eee;
+    }
+    
+    .item-row:last-child {
+      border-bottom: none;
+    }
+    
+    .item-name {
+      font-weight: 600;
+      color: #a72245;
+    }
+    
+    .no-orders {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+    
+    .details-icon {
+      font-size: 22px;
+      color: #a72245;
+      transition: transform 0.3s;
+      cursor: pointer;
+    }
+    
+    .expanded .details-icon {
+      transform: rotate(180deg);
+    }
+    
+    .delete-btn {
+      background: linear-gradient(to right, #e74c3c, #c0392b);
+      color: white;
+      padding: 10px 15px;
+      border-radius: 8px;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.3s;
+    }
+    
+    .delete-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
+    }
+    
+    .actions-cell {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+    
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(5px);
+    }
+    
+    .modal-content {
+      background: white;
+      border-radius: 15px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+      animation: modalAppear 0.4s ease-out;
+    }
+    
+    @keyframes modalAppear {
+      from {
+        opacity: 0;
+        transform: translateY(-50px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .modal-header {
+      background: linear-gradient(to right, #a72245, #8a1b3a);
+      color: white;
+      padding: 20px;
+      text-align: center;
+      font-size: 22px;
+      font-weight: bold;
+    }
+    
+    .modal-body {
+      padding: 30px;
+      text-align: center;
+    }
+    
+    .password-instruction {
+      color: #a72245;
+      margin-bottom: 25px;
+      font-size: 18px;
+    }
+    
+    .password-input {
+      width: 100%;
+      padding: 15px;
+      margin-bottom: 25px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 18px;
+      text-align: center;
+      letter-spacing: 5px;
+      transition: all 0.3s;
+    }
+    
+    .password-input:focus {
+      border-color: #a72245;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(167, 34, 69, 0.2);
+    }
+    
+    .modal-footer {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      padding: 0 30px 30px;
+    }
+    
+    .confirm-btn {
+      background: linear-gradient(to right, #2ecc71, #27ae60);
+      color: white;
+      padding: 12px 30px;
+      font-size: 18px;
+    }
+    
+    .cancel-btn {
+      background: linear-gradient(to right, #95a5a6, #7f8c8d);
+      color: white;
+      padding: 12px 30px;
+      font-size: 18px;
+    }
+    
+    .message {
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 10px;
+      text-align: center;
+      font-weight: bold;
+      display: none;
+    }
+    
+    .success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    
+    footer {
+      text-align: center;
+      padding: 20px;
+      color: #666;
+      font-size: 14px;
+      margin-top: 30px;
+    }
+    
+    @media (max-width: 768px) {
+      .search-container {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      th, td {
+        padding: 14px 10px;
+        font-size: 15px;
+      }
+      
+      .actions-cell {
+        flex-direction: column;
+        align-items: center;
+      }
+      
+      .delete-btn {
+        width: 100%;
+        justify-content: center;
+      }
+      
+      .modal-footer {
+        flex-direction: column;
+        gap: 10px;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1><i class="fas fa-shopping-bag"></i> نظام إدارة الطلبات</h1>
+      <p class="subtitle">إدارة الطلبات </p>
+    </header>
+    
+    <div class="search-container">
+      <div class="search-box">
+        <input type="text" id="search-input" placeholder="ابحث بالاسم أو رقم الهاتف...">
+        <i class="fas fa-search"></i>
+      </div>
+      <div class="search-buttons">
+        <button class="search-btn" id="search-btn">
+          <i class="fas fa-search"></i> بحث
+        </button>
+        <button class="reset-btn" id="reset-btn">
+          <i class="fas fa-redo"></i> إعادة تعيين
+        </button>
+      </div>
+    </div>
+    
+    <div id="message" class="message"></div>
+    
+    <div class="orders-container">
+      <table id="orders-table">
+        <thead>
+          <tr>
+            <th>التفاصيل</th>
+            <th>التاريخ</th>
+            <th>العميل</th>
+            <th>الهاتف</th>
+            <th>المنطقة</th>
+            <th>الدفع</th>
+            <th>الإجمالي</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="orders-body"></tbody>
+      </table>
+    </div>
+    
+    <footer>
+      <p>© 2023 نظام إدارة الطلبات | تم التطوير بواسطة فريق التقنية</p>
+    </footer>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="deleteModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <i class="fas fa-exclamation-triangle"></i> تأكيد حذف الطلب
+      </div>
+      <div class="modal-body">
+        <p class="password-instruction">لحذف هذا الطلب، يرجى إدخال كلمة المرور المكونة من 4 أرقام</p>
+        <input type="password" id="password-input" class="password-input" placeholder="" maxlength="4" inputmode="numeric">
+      </div>
+      <div class="modal-footer">
+        <button class="confirm-btn" id="confirm-delete">
+          <i class="fas fa-check"></i> تأكيد الحذف
+        </button>
+        <button class="cancel-btn" id="cancel-delete">
+          <i class="fas fa-times"></i> إلغاء
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // كلمة المرور الافتراضية (يمكن تغييرها)
+    const DELETE_PASSWORD = "1234";
+    
+    const firebaseConfig = {
+      apiKey: "AIzaSyAOhgRpF5YZ5fochZrmTniCtK4ScUnAsx0",
+      authDomain: "all-in-one-testing.firebaseapp.com",
+      databaseURL: "https://all-in-one-testing-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "all-in-one-testing",
+      storageBucket: "all-in-one-testing.firebasestorage.app",
+      messagingSenderId: "1020817144764",
+      appId: "1:1020817144764:web:79999a783418c2b3e309b9",
+      measurementId: "G-BV2GP93MKN"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    
+    // Global variables
+    let allOrders = {};
+    let currentOrderKey = null;
+    const ordersBody = document.getElementById('orders-body');
+    const searchInput = document.getElementById('search-input');
+    const searchBtn = document.getElementById('search-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const deleteModal = document.getElementById('deleteModal');
+    const passwordInput = document.getElementById('password-input');
+    const confirmDeleteBtn = document.getElementById('confirm-delete');
+    const cancelDeleteBtn = document.getElementById('cancel-delete');
+    const messageDiv = document.getElementById('message');
+    
+    // Function to format date
+    function formatDate(dateString) {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('ar-EG', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+    
+    // Function to display order items
+    function displayOrderItems(items) {
+      if (!items) return '<div>لا توجد منتجات</div>';
+      
+      let html = '<div class="items-container">';
+      Object.values(items).forEach(item => {
+        html += `
+          <div class="item-row">
+            <span class="item-name">${item.name || 'غير معروف'}</span>
+            <div>
+              <span>${item.quantity || 1} × ${item.price || 0} د.أ</span>
+              <span style="margin-right: 20px">${(item.quantity * item.price) || 0} د.أ</span>
+            </div>
+          </div>
+        `;
+      });
+      html += '</div>';
+      return html;
+    }
+    
+    // Function to show message
+    function showMessage(text, isSuccess) {
+      messageDiv.textContent = text;
+      messageDiv.className = isSuccess ? 'message success' : 'message error';
+      messageDiv.style.display = 'block';
+      
+      setTimeout(() => {
+        messageDiv.style.opacity = '0';
+        setTimeout(() => {
+          messageDiv.style.display = 'none';
+          messageDiv.style.opacity = '1';
+        }, 500);
+      }, 3000);
+    }
+    
+    // Function to render orders
+    function renderOrders(orders) {
+      ordersBody.innerHTML = '';
+      
+      if (Object.keys(orders).length === 0) {
+        ordersBody.innerHTML = `
+          <tr>
+            <td colspan="8" class="no-orders">
+              <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 15px;"></i>
+              <h3>لا توجد طلبات</h3>
+              <p>لم يتم العثور على أي طلبات تطابق معايير البحث</p>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      
+      Object.entries(orders).forEach(([key, order]) => {
+        const orderRow = `
+          <tr class="order-row" data-key="${key}">
+            <td style="text-align: center;">
+              <i class="fas fa-chevron-down details-icon"></i>
+            </td>
+            <td>${formatDate(order.date) || ''}</td>
+            <td>${order.customerName || ''}</td>
+            <td>${order.customerPhone || ''}</td>
+            <td>${order.deliveryArea || ''}</td>
+            <td>${order.paymentMethod || ''}</td>
+            <td>${order.total ? order.total + ' د.أ' : ''}</td>
+            <td class="actions-cell">
+              <button class="delete-btn" data-key="${key}">
+                <i class="fas fa-trash-alt"></i> حذف
+              </button>
+            </td>
+          </tr>
+          <tr class="order-details" style="display: none;" id="details-${key}">
+            <td colspan="8">
+              <h3 style="margin-top: 0; color: #a72245;">تفاصيل الطلب</h3>
+              <div>
+                <strong>المنتجات:</strong>
+                ${displayOrderItems(order.items)}
+              </div>
+              ${order.notes ? `<div style="margin-top: 15px;"><strong>ملاحظات:</strong> ${order.notes}</div>` : ''}
+            </td>
+          </tr>
+        `;
+        ordersBody.innerHTML += orderRow;
+      });
+      
+      // Add event listeners to order rows
+      document.querySelectorAll('.order-row').forEach(row => {
+        const detailsIcon = row.querySelector('.details-icon');
+        detailsIcon.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const key = row.getAttribute('data-key');
+          const detailsRow = document.getElementById(`details-${key}`);
+          
+          if (detailsRow.style.display === 'none') {
+            detailsRow.style.display = 'table-row';
+            row.classList.add('expanded');
+          } else {
+            detailsRow.style.display = 'none';
+            row.classList.remove('expanded');
+          }
+        });
+      });
+      
+      // Add event listeners to delete buttons
+      document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          currentOrderKey = this.getAttribute('data-key');
+          passwordInput.value = '';
+          deleteModal.style.display = 'flex';
+        });
+      });
+    }
+    
+    // Function to search orders
+    function searchOrders() {
+      const searchTerm = searchInput.value.trim().toLowerCase();
+      
+      if (!searchTerm) {
+        renderOrders(allOrders);
+        return;
+      }
+      
+      const filteredOrders = {};
+      
+      Object.entries(allOrders).forEach(([key, order]) => {
+        const nameMatch = order.customerName && order.customerName.toLowerCase().includes(searchTerm);
+        const phoneMatch = order.customerPhone && order.customerPhone.includes(searchTerm);
+        
+        if (nameMatch || phoneMatch) {
+          filteredOrders[key] = order;
+        }
+      });
+      
+      renderOrders(filteredOrders);
+    }
+    
+    // Function to delete order
+    function deleteOrder() {
+      const enteredPassword = passwordInput.value;
+      
+      if (enteredPassword !== DELETE_PASSWORD) {
+        showMessage('كلمة المرور غير صحيحة!', false);
+        passwordInput.value = '';
+        return;
+      }
+      
+      // Delete from Firebase
+      db.ref("orders/" + currentOrderKey).remove()
+        .then(() => {
+          showMessage('تم حذف الطلب بنجاح!', true);
+          deleteModal.style.display = 'none';
+        })
+        .catch((error) => {
+          showMessage('حدث خطأ أثناء حذف الطلب: ' + error.message, false);
+          deleteModal.style.display = 'none';
+        });
+    }
+    
+    // Fetch orders from Firebase
+    function fetchOrders() {
+      db.ref("orders").on("value", (snapshot) => {
+        allOrders = snapshot.val() || {};
+        renderOrders(allOrders);
+      });
+    }
+    
+    // Event listeners
+    searchBtn.addEventListener('click', searchOrders);
+    
+    resetBtn.addEventListener('click', function() {
+      searchInput.value = '';
+      renderOrders(allOrders);
+    });
+    
+    searchInput.addEventListener('keyup', function(event) {
+      if (event.key === 'Enter') {
+        searchOrders();
+      }
+    });
+    
+    confirmDeleteBtn.addEventListener('click', deleteOrder);
+    
+    cancelDeleteBtn.addEventListener('click', function() {
+      deleteModal.style.display = 'none';
+    });
+    
+    // Close modal when clicking outside
+    window.addEventListener('click', function(event) {
+      if (event.target === deleteModal) {
+        deleteModal.style.display = 'none';
+      }
+    });
+    
+    // Allow only numbers in password field
+    passwordInput.addEventListener('input', function() {
+      this.value = this.value.replace(/\D/g, '');
+    });
+    
+    // Initialize
+    fetchOrders();
+  </script>
+</body>
+</html>

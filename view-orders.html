@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -30,6 +31,7 @@
       background: white;
       border-radius: 15px;
       box-shadow: 0 5px 20px rgba(167, 34, 69, 0.1);
+      position: relative;
     }
     
     h1 {
@@ -102,6 +104,7 @@
     .search-buttons {
       display: flex;
       gap: 15px;
+      flex-wrap: wrap;
     }
     
     button {
@@ -125,6 +128,16 @@
     
     .reset-btn {
       background: linear-gradient(to right, #2c3e50, #1a2530);
+      color: white;
+    }
+    
+    .export-btn {
+      background: linear-gradient(to right, #27ae60, #219653);
+      color: white;
+    }
+    
+    .date-filter-btn {
+      background: linear-gradient(to right, #9b59b6, #8e44ad);
       color: white;
     }
     
@@ -368,10 +381,99 @@
       margin-top: 30px;
     }
     
+    /* Export Modal Specific Styles */
+    .export-modal .modal-header {
+      background: linear-gradient(to right, #27ae60, #219653);
+    }
+    
+    .date-range-container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    
+    .date-picker-container {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    
+    .date-picker-container label {
+      font-weight: bold;
+      color: #27ae60;
+      margin-bottom: 5px;
+    }
+    
+    .date-picker {
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 16px;
+      text-align: center;
+    }
+    
+    .date-picker:focus {
+      border-color: #27ae60;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.2);
+    }
+    
+    /* Loading Spinner */
+    .spinner {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(167, 34, 69, 0.2);
+      border-radius: 50%;
+      border-top: 4px solid #a72245;
+      animation: spin 1s linear infinite;
+      margin-bottom: 15px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    /* Date Filter Container */
+    .date-filter-container {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .date-filter-container label {
+      font-weight: bold;
+      color: #9b59b6;
+    }
+    
+    .date-display {
+      background: #f0f2f5;
+      padding: 8px 15px;
+      border-radius: 8px;
+      font-weight: bold;
+      color: #8e44ad;
+    }
+    
     @media (max-width: 768px) {
       .search-container {
         flex-direction: column;
         align-items: stretch;
+      }
+      
+      .search-buttons {
+        flex-direction: column;
+      }
+      
+      button {
+        width: 100%;
+        justify-content: center;
       }
       
       th, td {
@@ -393,17 +495,23 @@
         flex-direction: column;
         gap: 10px;
       }
+      
+      .date-filter-container {
+        flex-direction: column;
+        align-items: stretch;
+      }
     }
   </style>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
   <div class="container">
     <header>
       <h1><i class="fas fa-shopping-bag"></i> نظام إدارة الطلبات</h1>
-      <p class="subtitle">إدارة الطلبات </p>
+      <p class="subtitle">إدارة الطلبات مع تصدير البيانات بنطاق تاريخ</p>
     </header>
     
     <div class="search-container">
@@ -418,7 +526,21 @@
         <button class="reset-btn" id="reset-btn">
           <i class="fas fa-redo"></i> إعادة تعيين
         </button>
+        <button class="export-btn" id="export-btn">
+          <i class="fas fa-file-excel"></i> تصدير إلى إكسل
+        </button>
+        <button class="date-filter-btn" id="date-filter-btn">
+          <i class="fas fa-calendar-alt"></i> تصفية حسب التاريخ
+        </button>
       </div>
+    </div>
+    
+    <div id="date-filter-container" class="date-filter-container" style="display: none;">
+      <label>نطاق التاريخ المحدد:</label>
+      <div class="date-display" id="selected-date-display">لم يتم اختيار نطاق تاريخ</div>
+      <button class="reset-btn" id="reset-date-filter">
+        <i class="fas fa-times"></i> إزالة التصفية
+      </button>
     </div>
     
     <div id="message" class="message"></div>
@@ -437,7 +559,14 @@
             <th>الإجراءات</th>
           </tr>
         </thead>
-        <tbody id="orders-body"></tbody>
+        <tbody id="orders-body">
+          <tr id="loading-row">
+            <td colspan="8" style="text-align: center; padding: 40px;">
+              <div class="spinner"></div>
+              <p>جاري تحميل الطلبات...</p>
+            </td>
+          </tr>
+        </tbody>
       </table>
     </div>
     
@@ -467,6 +596,43 @@
     </div>
   </div>
 
+  <!-- Export Modal -->
+  <div id="exportModal" class="modal export-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <i class="fas fa-file-excel"></i> تصدير الطلبات إلى إكسل
+      </div>
+      <div class="modal-body">
+        <p class="password-instruction">اختر نطاق التاريخ الذي ترغب في تصدير الطلبات منه:</p>
+        
+        <div class="date-range-container">
+          <div class="date-picker-container">
+            <label for="export-start-date">من التاريخ:</label>
+            <input type="date" id="export-start-date" class="date-picker">
+          </div>
+          
+          <div class="date-picker-container">
+            <label for="export-end-date">إلى التاريخ:</label>
+            <input type="date" id="export-end-date" class="date-picker">
+          </div>
+        </div>
+        
+        <p>أو</p>
+        <button class="export-btn" id="export-all-btn">
+          <i class="fas fa-download"></i> تصدير جميع الطلبات
+        </button>
+      </div>
+      <div class="modal-footer">
+        <button class="export-btn" id="confirm-export">
+          <i class="fas fa-file-excel"></i> تصدير
+        </button>
+        <button class="cancel-btn" id="cancel-export">
+          <i class="fas fa-times"></i> إلغاء
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // كلمة المرور الافتراضية (يمكن تغييرها)
     const DELETE_PASSWORD = "1234";
@@ -489,15 +655,28 @@
     // Global variables
     let allOrders = {};
     let currentOrderKey = null;
+    let selectedDateFilter = null;
     const ordersBody = document.getElementById('orders-body');
     const searchInput = document.getElementById('search-input');
     const searchBtn = document.getElementById('search-btn');
     const resetBtn = document.getElementById('reset-btn');
+    const exportBtn = document.getElementById('export-btn');
+    const dateFilterBtn = document.getElementById('date-filter-btn');
+    const resetDateFilterBtn = document.getElementById('reset-date-filter');
+    const dateFilterContainer = document.getElementById('date-filter-container');
+    const selectedDateDisplay = document.getElementById('selected-date-display');
     const deleteModal = document.getElementById('deleteModal');
+    const exportModal = document.getElementById('exportModal');
     const passwordInput = document.getElementById('password-input');
     const confirmDeleteBtn = document.getElementById('confirm-delete');
     const cancelDeleteBtn = document.getElementById('cancel-delete');
+    const cancelExportBtn = document.getElementById('cancel-export');
+    const confirmExportBtn = document.getElementById('confirm-export');
+    const exportStartDateInput = document.getElementById('export-start-date');
+    const exportEndDateInput = document.getElementById('export-end-date');
+    const exportAllBtn = document.getElementById('export-all-btn');
     const messageDiv = document.getElementById('message');
+    const loadingRow = document.getElementById('loading-row');
     
     // Function to format date
     function formatDate(dateString) {
@@ -510,6 +689,13 @@
         hour: '2-digit',
         minute: '2-digit'
       });
+    }
+    
+    // Function to get date part only (without time)
+    function getDatePart(dateString) {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      return date.toISOString().split('T')[0];
     }
     
     // Function to display order items
@@ -545,6 +731,27 @@
           messageDiv.style.opacity = '1';
         }, 500);
       }, 3000);
+    }
+    
+    // Function to filter orders by date range
+    function filterOrdersByDateRange(orders, startDate, endDate) {
+      if (!startDate || !endDate) return orders;
+      
+      const filteredOrders = {};
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      
+      // Add one day to end date to include the entire day
+      end.setDate(end.getDate() + 1);
+      
+      Object.entries(orders).forEach(([key, order]) => {
+        const orderDate = new Date(order.date);
+        if (orderDate >= start && orderDate < end) {
+          filteredOrders[key] = order;
+        }
+      });
+      
+      return filteredOrders;
     }
     
     // Function to render orders
@@ -628,15 +835,22 @@
     // Function to search orders
     function searchOrders() {
       const searchTerm = searchInput.value.trim().toLowerCase();
+      let ordersToRender = {...allOrders};
+      
+      // Apply date filter if set
+      if (selectedDateFilter) {
+        const [startDate, endDate] = selectedDateFilter.split('|');
+        ordersToRender = filterOrdersByDateRange(ordersToRender, startDate, endDate);
+      }
       
       if (!searchTerm) {
-        renderOrders(allOrders);
+        renderOrders(ordersToRender);
         return;
       }
       
       const filteredOrders = {};
       
-      Object.entries(allOrders).forEach(([key, order]) => {
+      Object.entries(ordersToRender).forEach(([key, order]) => {
         const nameMatch = order.customerName && order.customerName.toLowerCase().includes(searchTerm);
         const phoneMatch = order.customerPhone && order.customerPhone.includes(searchTerm);
         
@@ -670,11 +884,63 @@
         });
     }
     
+    // Function to export orders to Excel
+    function exportToExcel(startDate = null, endDate = null) {
+      let ordersToExport = allOrders;
+      
+      if (startDate && endDate) {
+        ordersToExport = filterOrdersByDateRange(allOrders, startDate, endDate);
+      }
+      
+      if (Object.keys(ordersToExport).length === 0) {
+        showMessage('لا توجد طلبات للتصدير!', false);
+        return;
+      }
+      
+      // Prepare data for Excel
+      const data = Object.values(ordersToExport).map(order => {
+        return {
+          'التاريخ': formatDate(order.date) || '',
+          'العميل': order.customerName || '',
+          'الهاتف': order.customerPhone || '',
+          'المنطقة': order.deliveryArea || '',
+          'طريقة الدفع': order.paymentMethod || '',
+          'الإجمالي': order.total || 0,
+          'ملاحظات': order.notes || '',
+          'المنتجات': order.items ? Object.values(order.items).map(item => 
+            `${item.name} (${item.quantity} × ${item.price} د.أ)`
+          ).join('; ') : ''
+        };
+      });
+      
+      // Create worksheet
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "الطلبات");
+      
+      // Generate file and save
+      const fileName = startDate && endDate ? 
+        `الطلبات_من_${startDate}_إلى_${endDate}.xlsx` : 
+        `الطلبات_${new Date().toISOString().split('T')[0]}.xlsx`;
+      
+      XLSX.writeFile(wb, fileName);
+      showMessage('تم تصدير الطلبات بنجاح!', true);
+    }
+    
     // Fetch orders from Firebase
     function fetchOrders() {
       db.ref("orders").on("value", (snapshot) => {
         allOrders = snapshot.val() || {};
-        renderOrders(allOrders);
+        loadingRow.style.display = 'none';
+        searchOrders();
+      }, (error) => {
+        loadingRow.innerHTML = `
+          <td colspan="8" class="no-orders">
+            <i class="fas fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 15px; color: #e74c3c;"></i>
+            <h3>حدث خطأ في تحميل البيانات</h3>
+            <p>${error.message || 'الرجاء المحاولة لاحقاً'}</p>
+          </td>
+        `;
       });
     }
     
@@ -683,7 +949,7 @@
     
     resetBtn.addEventListener('click', function() {
       searchInput.value = '';
-      renderOrders(allOrders);
+      searchOrders();
     });
     
     searchInput.addEventListener('keyup', function(event) {
@@ -698,10 +964,109 @@
       deleteModal.style.display = 'none';
     });
     
+    exportBtn.addEventListener('click', function() {
+      const today = new Date().toISOString().split('T')[0];
+      exportStartDateInput.value = '';
+      exportEndDateInput.value = today;
+      exportModal.style.display = 'flex';
+    });
+    
+    dateFilterBtn.addEventListener('click', function() {
+      const today = new Date().toISOString().split('T')[0];
+      
+      Swal.fire({
+        title: 'تصفية حسب التاريخ',
+        html: `
+          <p>اختر نطاق التاريخ للتصفية:</p>
+          <div class="date-range-container" style="margin: 15px 0;">
+            <div class="date-picker-container">
+              <label for="swal-start-date">من التاريخ:</label>
+              <input type="date" id="swal-start-date" class="swal2-input" value="" max="${today}">
+            </div>
+            
+            <div class="date-picker-container">
+              <label for="swal-end-date">إلى التاريخ:</label>
+              <input type="date" id="swal-end-date" class="swal2-input" value="${today}" max="${today}">
+            </div>
+          </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'تطبيق التصفية',
+        cancelButtonText: 'إلغاء',
+        focusConfirm: false,
+        preConfirm: () => {
+          const startDate = document.getElementById('swal-start-date').value;
+          const endDate = document.getElementById('swal-end-date').value;
+          
+          if (!startDate || !endDate) {
+            Swal.showValidationMessage('يرجى تحديد نطاق التاريخ كاملاً');
+            return false;
+          }
+          
+          if (new Date(startDate) > new Date(endDate)) {
+            Swal.showValidationMessage('تاريخ البداية يجب أن يكون قبل تاريخ النهاية');
+            return false;
+          }
+          
+          return [startDate, endDate];
+        },
+        customClass: {
+          confirmButton: 'confirm-btn',
+          cancelButton: 'cancel-btn',
+          container: 'swal-container'
+        }
+      }).then((result) => {
+        if (result.isConfirmed) {
+          const [startDate, endDate] = result.value;
+          selectedDateFilter = `${startDate}|${endDate}`;
+          selectedDateDisplay.textContent = `${startDate} - ${endDate}`;
+          dateFilterContainer.style.display = 'flex';
+          searchOrders();
+          showMessage('تم تطبيق تصفية التاريخ بنجاح!', true);
+        }
+      });
+    });
+    
+    resetDateFilterBtn.addEventListener('click', function() {
+      selectedDateFilter = null;
+      dateFilterContainer.style.display = 'none';
+      searchOrders();
+      showMessage('تم إزالة تصفية التاريخ بنجاح!', true);
+    });
+    
+    cancelExportBtn.addEventListener('click', function() {
+      exportModal.style.display = 'none';
+    });
+    
+    confirmExportBtn.addEventListener('click', function() {
+      const startDate = exportStartDateInput.value;
+      const endDate = exportEndDateInput.value;
+      
+      if (startDate && endDate) {
+        if (new Date(startDate) > new Date(endDate)) {
+          showMessage('تاريخ البداية يجب أن يكون قبل تاريخ النهاية!', false);
+          return;
+        }
+        
+        exportToExcel(startDate, endDate);
+        exportModal.style.display = 'none';
+      } else {
+        showMessage('يرجى تحديد نطاق التاريخ كاملاً!', false);
+      }
+    });
+    
+    exportAllBtn.addEventListener('click', function() {
+      exportToExcel();
+      exportModal.style.display = 'none';
+    });
+    
     // Close modal when clicking outside
     window.addEventListener('click', function(event) {
       if (event.target === deleteModal) {
         deleteModal.style.display = 'none';
+      }
+      if (event.target === exportModal) {
+        exportModal.style.display = 'none';
       }
     });
     
@@ -713,5 +1078,58 @@
     // Initialize
     fetchOrders();
   </script>
+  
+  <!-- SweetAlert for date picker -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    .swal2-popup {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+      width: 90%;
+      max-width: 500px;
+    }
+    
+    .swal2-title {
+      color: #a72245;
+      font-weight: bold;
+      font-size: 22px;
+    }
+    
+    .swal2-input {
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+      font-size: 16px;
+      width: 100%;
+      margin: 5px 0;
+    }
+    
+    .swal2-input:focus {
+      border-color: #a72245;
+      box-shadow: 0 0 0 3px rgba(167, 34, 69, 0.2);
+    }
+    
+    .swal2-confirm {
+      background: linear-gradient(to right, #a72245, #8a1b3a) !important;
+      border: none !important;
+      padding: 12px 25px !important;
+      border-radius: 10px !important;
+      font-weight: 600 !important;
+    }
+    
+    .swal2-cancel {
+      background: linear-gradient(to right, #95a5a6, #7f8c8d) !important;
+      border: none !important;
+      padding: 12px 25px !important;
+      border-radius: 10px !important;
+      font-weight: 600 !important;
+    }
+    
+    .swal-container .swal2-html-container {
+      margin: 15px 0;
+    }
+  </style>
 </body>
 </html>

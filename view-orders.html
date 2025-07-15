@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -235,21 +234,49 @@
       transform: rotate(180deg);
     }
     
-    .delete-btn {
-      background: linear-gradient(to right, #e74c3c, #c0392b);
-      color: white;
-      padding: 10px 15px;
-      border-radius: 8px;
+    .status-badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 20px;
       font-size: 14px;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      transition: all 0.3s;
+      font-weight: 600;
     }
     
-    .delete-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
+    .status-onway {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    
+    .status-pending {
+      background-color: #fff3cd;
+      color: #856404;
+    }
+    
+    .status-cancelled {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    
+    .status-postponed {
+      background-color: #e2e3e5;
+      color: #383d41;
+    }
+    
+    .status-delivered {
+      background-color: #cce5ff;
+      color: #004085;
+    }
+    
+    .prep-time-badge {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 15px;
+      background-color: #f0f7ff;
+      border: 1px solid #3498db;
+      font-size: 13px;
+      font-weight: 600;
+      color: #2c3e50;
+      margin-left: 5px;
     }
     
     .actions-cell {
@@ -462,6 +489,65 @@
       color: #8e44ad;
     }
     
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+    
+    .form-group select, .form-group input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    
+    .form-group select:focus, .form-group input:focus {
+      border-color: #a72245;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(167, 34, 69, 0.1);
+    }
+    
+    .save-btn {
+      background: linear-gradient(to right, #3498db, #2980b9);
+      color: white;
+      padding: 12px 25px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      display: block;
+      margin-top: 20px;
+      width: 100%;
+      font-weight: 600;
+    }
+    
+    .delete-btn {
+      background: linear-gradient(to right, #e74c3c, #c0392b);
+      color: white;
+      padding: 12px 25px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      display: block;
+      margin-top: 10px;
+      width: 100%;
+      font-weight: 600;
+    }
+    
+    .prep-time-details {
+      font-size: 13px;
+      color: #555;
+      margin-top: 5px;
+    }
+    
     @media (max-width: 768px) {
       .search-container {
         flex-direction: column;
@@ -482,24 +568,14 @@
         font-size: 15px;
       }
       
-      .actions-cell {
+      .date-filter-container {
         flex-direction: column;
-        align-items: center;
-      }
-      
-      .delete-btn {
-        width: 100%;
-        justify-content: center;
+        align-items: stretch;
       }
       
       .modal-footer {
         flex-direction: column;
         gap: 10px;
-      }
-      
-      .date-filter-container {
-        flex-direction: column;
-        align-items: stretch;
       }
     }
   </style>
@@ -557,12 +633,13 @@
             <th>المنطقة</th>
             <th>الدفع</th>
             <th>الإجمالي</th>
-            <th>الإجراءات</th>
+            <th>مندوب التوصيل</th>
+            <th>حالة الطلب</th>
           </tr>
         </thead>
         <tbody id="orders-body">
           <tr id="loading-row">
-            <td colspan="8" style="text-align: center; padding: 40px;">
+            <td colspan="9" style="text-align: center; padding: 40px;">
               <div class="spinner"></div>
               <p>جاري تحميل الطلبات...</p>
             </td>
@@ -572,29 +649,8 @@
     </div>
     
     <footer>
-      <p>© 2023 نظام إدارة الطلبات | تم التطوير بواسطة فريق التقنية</p>
+      <p>© 2025 نظام إدارة الطلبات</p>
     </footer>
-  </div>
-
-  <!-- Delete Confirmation Modal -->
-  <div id="deleteModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <i class="fas fa-exclamation-triangle"></i> تأكيد حذف الطلب
-      </div>
-      <div class="modal-body">
-        <p class="password-instruction">لحذف هذا الطلب، يرجى إدخال كلمة المرور المكونة من 4 أرقام</p>
-        <input type="password" id="password-input" class="password-input" placeholder="" maxlength="4" inputmode="numeric">
-      </div>
-      <div class="modal-footer">
-        <button class="confirm-btn" id="confirm-delete">
-          <i class="fas fa-check"></i> تأكيد الحذف
-        </button>
-        <button class="cancel-btn" id="cancel-delete">
-          <i class="fas fa-times"></i> إلغاء
-        </button>
-      </div>
-    </div>
   </div>
 
   <!-- Export Modal -->
@@ -634,9 +690,43 @@
     </div>
   </div>
 
+  <!-- Delete Order Modal -->
+  <div id="deleteModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header" style="background: linear-gradient(to right, #e74c3c, #c0392b);">
+        <i class="fas fa-trash-alt"></i> حذف الطلب
+      </div>
+      <div class="modal-body">
+        <p class="password-instruction">يرجى إدخال كلمة المرور لحذف الطلب</p>
+        <input type="password" id="delete-password" class="password-input" placeholder="كلمة المرور">
+        <p id="delete-message" style="color: #e74c3c; margin-bottom: 15px; display: none;"></p>
+      </div>
+      <div class="modal-footer">
+        <button class="confirm-btn" id="confirm-delete" style="background: linear-gradient(to right, #e74c3c, #c0392b);">
+          <i class="fas fa-trash"></i> تأكيد الحذف
+        </button>
+        <button class="cancel-btn" id="cancel-delete">
+          <i class="fas fa-times"></i> إلغاء
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
-    // كلمة المرور الافتراضية (يمكن تغييرها)
-    const DELETE_PASSWORD = "1234";
+    // قائمة مندوبي التوصيل
+    const DELIVERY_PERSONS = [' محمد التيلاوي', ' ايهن النبالي', 'هيثم النبالي ', 'توب دليفرري  ', 'استلام '];
+    
+    // حالات الطلب
+    const ORDER_STATUSES = [
+      {value: 'pending', label: 'معلق', class: 'status-pending'},
+      {value: 'onway', label: 'في الطريق للعميل', class: 'status-onway'},
+      {value: 'delivered', label: 'تم التسليم', class: 'status-delivered'},
+      {value: 'cancelled', label: 'ملغي', class: 'status-cancelled'},
+      {value: 'postponed', label: 'مؤجل', class: 'status-postponed'}
+    ];
+    
+    // كلمة المرور لحذف الطلب
+    const DELETE_PASSWORD = "123456";
     
     const firebaseConfig = {
       apiKey: "AIzaSyAOhgRpF5YZ5fochZrmTniCtK4ScUnAsx0",
@@ -666,11 +756,7 @@
     const resetDateFilterBtn = document.getElementById('reset-date-filter');
     const dateFilterContainer = document.getElementById('date-filter-container');
     const selectedDateDisplay = document.getElementById('selected-date-display');
-    const deleteModal = document.getElementById('deleteModal');
     const exportModal = document.getElementById('exportModal');
-    const passwordInput = document.getElementById('password-input');
-    const confirmDeleteBtn = document.getElementById('confirm-delete');
-    const cancelDeleteBtn = document.getElementById('cancel-delete');
     const cancelExportBtn = document.getElementById('cancel-export');
     const confirmExportBtn = document.getElementById('confirm-export');
     const exportStartDateInput = document.getElementById('export-start-date');
@@ -678,24 +764,50 @@
     const exportAllBtn = document.getElementById('export-all-btn');
     const messageDiv = document.getElementById('message');
     const loadingRow = document.getElementById('loading-row');
+    const deleteModal = document.getElementById('deleteModal');
+    const deletePasswordInput = document.getElementById('delete-password');
+    const confirmDeleteBtn = document.getElementById('confirm-delete');
+    const cancelDeleteBtn = document.getElementById('cancel-delete');
+    const deleteMessage = document.getElementById('delete-message');
     
-    // Function to format date
-    function formatDate(dateString) {
-      if (!dateString) return '';
-      const date = new Date(dateString);
-      return date.toLocaleDateString('ar-EG', {
+    // Function to format date - حل مشكلة التاريخ غير الصالح
+    function formatDate(dateValue) {
+      if (!dateValue) return '';
+      
+      // معالجة تنسيق Firebase إذا كان كائنًا
+      if (typeof dateValue === 'object' && dateValue.hasOwnProperty('seconds')) {
+        dateValue = new Date(dateValue.seconds * 1000);
+      }
+      
+      const date = new Date(dateValue);
+      
+      if (isNaN(date.getTime())) return 'تاريخ غير صالح';
+      
+      // استخدام التاريخ الميلادي
+      return date.toLocaleString('en-US', {
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',
         hour: '2-digit',
-        minute: '2-digit'
-      });
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      }).replace(/,/g, '');
     }
-    
+
     // Function to get date part only (without time)
-    function getDatePart(dateString) {
-      if (!dateString) return '';
-      const date = new Date(dateString);
+    function getDatePart(dateValue) {
+      if (!dateValue) return '';
+      
+      // معالجة تنسيق Firebase إذا كان كائنًا
+      if (typeof dateValue === 'object' && dateValue.hasOwnProperty('seconds')) {
+        dateValue = new Date(dateValue.seconds * 1000);
+      }
+      
+      const date = new Date(dateValue);
+      
+      if (isNaN(date.getTime())) return '';
+      
       return date.toISOString().split('T')[0];
     }
     
@@ -755,6 +867,38 @@
       return filteredOrders;
     }
     
+    // Function to get status label and class
+    function getStatusInfo(status) {
+      const statusObj = ORDER_STATUSES.find(s => s.value === status);
+      if (statusObj) {
+        return {
+          label: statusObj.label,
+          class: statusObj.class
+        };
+      }
+      return {
+        label: status || 'غير محدد',
+        class: 'status-pending'
+      };
+    }
+    
+    // Function to calculate preparation time
+    function calculatePreparationTime(order) {
+      if (!order || !order.exitTime || !order.date) return null;
+      
+      // معالجة تنسيق Firebase إذا كان كائنًا
+      const receivedTime = new Date(order.date);
+      const exitTime = new Date(order.exitTime);
+      
+      if (isNaN(receivedTime.getTime()) || isNaN(exitTime.getTime())) {
+        return null;
+      }
+      
+      const diffMinutes = Math.floor((exitTime - receivedTime) / (1000 * 60));
+      
+      return diffMinutes;
+    }
+    
     // Function to render orders
     function renderOrders(orders) {
       ordersBody.innerHTML = '';
@@ -762,7 +906,7 @@
       if (Object.keys(orders).length === 0) {
         ordersBody.innerHTML = `
           <tr>
-            <td colspan="8" class="no-orders">
+            <td colspan="9" class="no-orders">
               <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 15px;"></i>
               <h3>لا توجد طلبات</h3>
               <p>لم يتم العثور على أي طلبات تطابق معايير البحث</p>
@@ -773,6 +917,18 @@
       }
       
       Object.entries(orders).forEach(([key, order]) => {
+        const statusInfo = getStatusInfo(order.status);
+        const prepTime = calculatePreparationTime(order);
+        
+        const prepTimeHTML = prepTime !== null ? 
+          `<span class="prep-time-badge">${prepTime} دقيقة</span>` : '';
+        
+        const prepTimeDetails = prepTime !== null ? 
+          `<div class="prep-time-details">
+            <div><strong>وقت الاستلام:</strong> ${formatDate(order.date)}</div>
+            <div><strong>وقت الخروج:</strong> ${formatDate(order.exitTime)}</div>
+          </div>` : '';
+        
         const orderRow = `
           <tr class="order-row" data-key="${key}">
             <td style="text-align: center;">
@@ -784,20 +940,55 @@
             <td>${order.deliveryArea || ''}</td>
             <td>${order.paymentMethod || ''}</td>
             <td>${order.total ? order.total + ' د.أ' : ''}</td>
-            <td class="actions-cell">
-              <button class="delete-btn" data-key="${key}">
-                <i class="fas fa-trash-alt"></i> حذف
-              </button>
+            <td>${order.deliveryPerson || 'لم يتم التحديد'}</td>
+            <td>
+              <div>
+                <span class="status-badge ${statusInfo.class}">${statusInfo.label}</span>
+                ${prepTimeHTML}
+              </div>
+              ${prepTimeDetails}
             </td>
           </tr>
           <tr class="order-details" style="display: none;" id="details-${key}">
-            <td colspan="8">
+            <td colspan="9">
               <h3 style="margin-top: 0; color: #a72245;">تفاصيل الطلب</h3>
               <div>
                 <strong>المنتجات:</strong>
                 ${displayOrderItems(order.items)}
               </div>
               ${order.notes ? `<div style="margin-top: 15px;"><strong>ملاحظات:</strong> ${order.notes}</div>` : ''}
+              
+              <div style="margin-top: 25px; background: #f8f9fa; padding: 20px; border-radius: 10px;">
+                <h4 style="color: #a72245; margin-bottom: 15px;">تحديث حالة الطلب</h4>
+                <form class="order-update-form" data-key="${key}">
+                  <div class="form-group">
+                    <label for="delivery-person-${key}">مندوب التوصيل:</label>
+                    <select id="delivery-person-${key}" name="deliveryPerson">
+                      <option value="">اختر مندوب التوصيل</option>
+                      ${DELIVERY_PERSONS.map(person => 
+                        `<option value="${person}" ${order.deliveryPerson === person ? 'selected' : ''}>${person}</option>`
+                      ).join('')}
+                    </select>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="order-status-${key}">حالة الطلب:</label>
+                    <select id="order-status-${key}" name="status">
+                      ${ORDER_STATUSES.map(status => 
+                        `<option value="${status.value}" ${order.status === status.value ? 'selected' : ''}>${status.label}</option>`
+                      ).join('')}
+                    </select>
+                  </div>
+                  
+                  <button type="submit" class="save-btn">
+                    <i class="fas fa-save"></i> حفظ التغييرات
+                  </button>
+                  
+                  <button type="button" class="delete-btn" data-key="${key}">
+                    <i class="fas fa-trash-alt"></i> حذف الطلب
+                  </button>
+                </form>
+              </div>
             </td>
           </tr>
         `;
@@ -822,12 +1013,52 @@
         });
       });
       
+      // Add event listeners to update forms
+      document.querySelectorAll('.order-update-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+          e.preventDefault();
+          const key = this.getAttribute('data-key');
+          const deliveryPerson = this.elements['deliveryPerson'].value;
+          const status = this.elements['status'].value;
+          
+          // If status is changing to "onway" and exitTime doesn't exist, record exit time
+          const exitTime = (status === 'onway' && !allOrders[key].exitTime) ? 
+            new Date().toISOString() : 
+            allOrders[key].exitTime || null;
+          
+          const updates = {
+            deliveryPerson,
+            status,
+            exitTime: exitTime || allOrders[key].exitTime || null
+          };
+          
+          // Update in Firebase
+          db.ref("orders/" + key).update(updates)
+            .then(() => {
+              showMessage('تم تحديث حالة الطلب بنجاح!', true);
+              
+              // Update local data
+              allOrders[key] = {
+                ...allOrders[key],
+                ...updates
+              };
+              
+              // Re-render orders to reflect changes
+              searchOrders();
+            })
+            .catch((error) => {
+              showMessage('حدث خطأ أثناء تحديث الطلب: ' + error.message, false);
+            });
+        });
+      });
+      
       // Add event listeners to delete buttons
       document.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-          e.stopPropagation();
-          currentOrderKey = this.getAttribute('data-key');
-          passwordInput.value = '';
+        btn.addEventListener('click', function() {
+          const key = this.getAttribute('data-key');
+          currentOrderKey = key;
+          deletePasswordInput.value = '';
+          deleteMessage.style.display = 'none';
           deleteModal.style.display = 'flex';
         });
       });
@@ -863,28 +1094,6 @@
       renderOrders(filteredOrders);
     }
     
-    // Function to delete order
-    function deleteOrder() {
-      const enteredPassword = passwordInput.value;
-      
-      if (enteredPassword !== DELETE_PASSWORD) {
-        showMessage('كلمة المرور غير صحيحة!', false);
-        passwordInput.value = '';
-        return;
-      }
-      
-      // Delete from Firebase
-      db.ref("orders/" + currentOrderKey).remove()
-        .then(() => {
-          showMessage('تم حذف الطلب بنجاح!', true);
-          deleteModal.style.display = 'none';
-        })
-        .catch((error) => {
-          showMessage('حدث خطأ أثناء حذف الطلب: ' + error.message, false);
-          deleteModal.style.display = 'none';
-        });
-    }
-    
     // Function to export orders to Excel
     function exportToExcel(startDate = null, endDate = null) {
       let ordersToExport = allOrders;
@@ -900,17 +1109,25 @@
       
       // Prepare data for Excel
       const data = Object.values(ordersToExport).map(order => {
+        const statusInfo = getStatusInfo(order.status);
+        const prepTime = calculatePreparationTime(order);
+        
         return {
           'التاريخ': formatDate(order.date) || '',
           'العميل': order.customerName || '',
           'الهاتف': order.customerPhone || '',
           'المنطقة': order.deliveryArea || '',
           'طريقة الدفع': order.paymentMethod || '',
+          'مندوب التوصيل': order.deliveryPerson || '',
+          'حالة الطلب': statusInfo.label,
+          'وقت التحضير (دقائق)': prepTime !== null ? prepTime : '',
           'الإجمالي': order.total || 0,
           'ملاحظات': order.notes || '',
           'المنتجات': order.items ? Object.values(order.items).map(item => 
             `${item.name} (${item.quantity} × ${item.price} د.أ)`
-          ).join('; ') : ''
+          ).join('; ') : '',
+          'وقت الاستلام': formatDate(order.date) || '',
+          'وقت الخروج': order.exitTime ? formatDate(order.exitTime) : ''
         };
       });
       
@@ -936,13 +1153,30 @@
         searchOrders();
       }, (error) => {
         loadingRow.innerHTML = `
-          <td colspan="8" class="no-orders">
+          <td colspan="9" class="no-orders">
             <i class="fas fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 15px; color: #e74c3c;"></i>
             <h3>حدث خطأ في تحميل البيانات</h3>
             <p>${error.message || 'الرجاء المحاولة لاحقاً'}</p>
           </td>
         `;
       });
+    }
+    
+    // Delete order from database
+    function deleteOrder(key) {
+      if (!key) return;
+      
+      db.ref("orders/" + key).remove()
+        .then(() => {
+          showMessage('تم حذف الطلب بنجاح!', true);
+          delete allOrders[key];
+          searchOrders();
+          deleteModal.style.display = 'none';
+        })
+        .catch((error) => {
+          showMessage('حدث خطأ أثناء حذف الطلب: ' + error.message, false);
+          deleteModal.style.display = 'none';
+        });
     }
     
     // Event listeners
@@ -957,12 +1191,6 @@
       if (event.key === 'Enter') {
         searchOrders();
       }
-    });
-    
-    confirmDeleteBtn.addEventListener('click', deleteOrder);
-    
-    cancelDeleteBtn.addEventListener('click', function() {
-      deleteModal.style.display = 'none';
     });
     
     exportBtn.addEventListener('click', function() {
@@ -1061,19 +1289,37 @@
       exportModal.style.display = 'none';
     });
     
-    // Close modal when clicking outside
-    window.addEventListener('click', function(event) {
-      if (event.target === deleteModal) {
-        deleteModal.style.display = 'none';
+    // Delete order event listeners
+    confirmDeleteBtn.addEventListener('click', function() {
+      const password = deletePasswordInput.value.trim();
+      
+      if (!password) {
+        deleteMessage.textContent = 'يرجى إدخال كلمة المرور';
+        deleteMessage.style.display = 'block';
+        return;
       }
+      
+      if (password !== DELETE_PASSWORD) {
+        deleteMessage.textContent = 'كلمة المرور غير صحيحة';
+        deleteMessage.style.display = 'block';
+        return;
+      }
+      
+      deleteOrder(currentOrderKey);
+    });
+    
+    cancelDeleteBtn.addEventListener('click', function() {
+      deleteModal.style.display = 'none';
+    });
+    
+    // Close modals when clicking outside
+    window.addEventListener('click', function(event) {
       if (event.target === exportModal) {
         exportModal.style.display = 'none';
       }
-    });
-    
-    // Allow only numbers in password field
-    passwordInput.addEventListener('input', function() {
-      this.value = this.value.replace(/\D/g, '');
+      if (event.target === deleteModal) {
+        deleteModal.style.display = 'none';
+      }
     });
     
     // Initialize

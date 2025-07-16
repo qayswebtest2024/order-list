@@ -248,8 +248,8 @@
     }
     
     .status-pending {
-      background-color: #0ab870;
-      color: #ffffff;
+      background-color: #fff3cd;
+      color: #856404;
     }
     
     .status-cancelled {
@@ -548,6 +548,57 @@
       margin-top: 5px;
     }
     
+    /* New Order Notification */
+    .new-order-notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #27ae60;
+      color: white;
+      padding: 15px 25px;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: slideIn 0.5s ease-out, slideOut 0.5s ease-out 4.5s;
+      display: none;
+    }
+    
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    
+    @keyframes slideOut {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+    }
+    
+    .notification-icon {
+      font-size: 24px;
+      animation: pulse 1s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    
     @media (max-width: 768px) {
       .search-container {
         flex-direction: column;
@@ -577,6 +628,12 @@
         flex-direction: column;
         gap: 10px;
       }
+      
+      .new-order-notification {
+        left: 20px;
+        right: 20px;
+        top: 10px;
+      }
     }
   </style>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -586,6 +643,15 @@
 </head>
 <body>
   <div class="container">
+    <!-- Notification for new orders -->
+    <div id="new-order-notification" class="new-order-notification">
+      <i class="fas fa-bell notification-icon"></i>
+      <div>
+        <strong>طلب جديد!</strong>
+        <p>تم استلام طلب جديد في النظام</p>
+      </div>
+    </div>
+    
     <header>
       <h1><i class="fas fa-shopping-bag"></i> نظام إدارة الطلبات</h1>
       <p class="subtitle">إدارة الطلبات مع تصدير البيانات بنطاق تاريخ</p>
@@ -769,6 +835,11 @@
     const confirmDeleteBtn = document.getElementById('confirm-delete');
     const cancelDeleteBtn = document.getElementById('cancel-delete');
     const deleteMessage = document.getElementById('delete-message');
+    const notification = document.getElementById('new-order-notification');
+    
+    // Audio notification for new orders
+    const notificationSound = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-clock-beep-989.mp3");
+    notificationSound.volume = 0.5; // Reduce volume a bit
     
     // Function to format date - حل مشكلة التاريخ غير الصالح
     function formatDate(dateValue) {
@@ -877,7 +948,7 @@
         };
       }
       return {
-        label: status || 'طلب جديد',
+        label: status || 'غير محدد',
         class: 'status-pending'
       };
     }
@@ -1147,8 +1218,32 @@
     
     // Fetch orders from Firebase
     function fetchOrders() {
+      // Keep track of current orders to detect new ones
+      let currentOrders = {};
+      
       db.ref("orders").on("value", (snapshot) => {
-        allOrders = snapshot.val() || {};
+        const newOrders = snapshot.val() || {};
+        allOrders = newOrders;
+        
+        // Check for new orders
+        if (Object.keys(currentOrders).length > 0) {
+          const newOrderKeys = Object.keys(newOrders).filter(key => !currentOrders[key]);
+          
+          if (newOrderKeys.length > 0) {
+            // Play notification sound
+            notificationSound.play();
+            
+            // Show visual notification
+            notification.style.display = 'flex';
+            
+            // Hide notification after 5 seconds
+            setTimeout(() => {
+              notification.style.display = 'none';
+            }, 5000);
+          }
+        }
+        
+        currentOrders = {...newOrders};
         loadingRow.style.display = 'none';
         searchOrders();
       }, (error) => {
